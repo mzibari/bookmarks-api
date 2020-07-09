@@ -6,6 +6,7 @@ const helmet = require('helmet')
 const { NODE_ENV } = require('./config')
 const BookmarkServices = require('./bookmarks-services')
 const app = express()
+const jsonParser = express.json()
 
 const morganOption = (NODE_ENV === 'production')
     ? 'tiny'
@@ -20,6 +21,29 @@ app.get('/bookmarks', (req, res, next) => {
     BookmarkServices.getAllBookmarks(knexInstance)
         .then(bookmarks => {
             res.json(bookmarks)
+        })
+        .catch(next)
+})
+
+app.post('/bookmarks', jsonParser, (req, res, next) => {
+    const { title, url, description } = req.body
+    let rating
+    if(!req.body.rating){
+        rating = 1
+    }
+    else {
+        rating = req.body.rating
+    }
+    const newBookmark = { title, url, description, rating }
+    BookmarkServices.insertBookmark(
+        req.app.get('db'),
+        newBookmark
+    )
+        .then(bookmark => {
+            res
+                .status(201)
+                .location(`/bookmarks/${bookmark.id}`)
+                .json(bookmark)
         })
         .catch(next)
 })

@@ -31,7 +31,7 @@ describe.only('Bookmarks Endpoints', function () {
         context('Given there are bookmarks in the database', () => {
             const testBookmarks = makeBookmarksArray()
             testBookmarks.map(bookmark => {
-                if (!bookmark.rating){
+                if (!bookmark.rating) {
                     bookmark.rating = 1;
                 }
             })
@@ -76,6 +76,32 @@ describe.only('Bookmarks Endpoints', function () {
                     .get(`/bookmarks/${bookmarkId}`)
                     .expect(200, expectedBookmark)
             })
+        })
+    })
+    describe.only(`POST /bookmarks`, () => {
+        it(`creates a bookmark, responding with 201 and the new bookmark`, function () {
+            const newBookmark = {
+                title: 'Test new bookmark',
+                url: 'Listicle',
+                description: 'Test new bookmark content...',
+                rating: 2
+            }
+            return supertest(app)
+                .post('/bookmarks')
+                .send(newBookmark)
+                .expect(201)
+                .expect(res => {
+                    expect(res.body.title).to.eql(newBookmark.title)
+                    expect(res.body.style).to.eql(newBookmark.style)
+                    expect(res.body.content).to.eql(newBookmark.content)
+                    expect(res.body).to.have.property('id')
+                    expect(res.headers.location).to.eql(`/bookmarks/${res.body.id}`)
+                })
+                .then(postRes =>
+                    supertest(app)
+                        .get(`/bookmarks/${postRes.body.id}`)
+                        .expect(postRes.body)
+                )
         })
     })
 })
