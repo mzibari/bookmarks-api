@@ -56,7 +56,7 @@ describe.only('Bookmarks Endpoints', function () {
                 const bookmarkId = 123456
                 return supertest(app)
                     .get(`/bookmarks/${bookmarkId}`)
-                    .expect(404, { error: { message: `bookmark doesn't exist` } })
+                    .expect(404, { error: { message: `Bookmark doesn't exist` } })
             })
         })
 
@@ -78,7 +78,7 @@ describe.only('Bookmarks Endpoints', function () {
             })
         })
     })
-    describe.only(`POST /bookmarks`, () => {
+    describe(`POST /bookmarks`, () => {
         it(`creates a bookmark, responding with 201 and the new bookmark`, function () {
             const newBookmark = {
                 title: 'Test new bookmark',
