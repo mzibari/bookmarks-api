@@ -3,7 +3,7 @@ const knex = require('knex')
 const app = require('../src/app')
 const { makeBookmarksArray } = require('./bookmarks.fixtures')
 
-describe.only('Bookmarks Endpoints', function () {
+describe('Bookmarks Endpoints', function () {
     let db
 
     before('make knex instance', () => {
@@ -102,6 +102,62 @@ describe.only('Bookmarks Endpoints', function () {
                         .get(`/bookmarks/${postRes.body.id}`)
                         .expect(postRes.body)
                 )
+        })
+        const requiredFields = ['title', 'url']
+
+        requiredFields.forEach(field => {
+            const newBookmark = {
+                title: 'Test new bookmark',
+                url: 'Listicle'
+            }
+
+            it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+                delete newBookmark[field]
+
+                return supertest(app)
+                    .post('/bookmarks')
+                    .send(newBookmark)
+                    .expect(400, {
+                        error: { message: `Missing '${field}' in request body` }
+                    })
+            })
+        })
+    })
+    describe(`DELETE /bookmarks/:bookmark_id`, () => {
+        context('Given there are bookmarks in the database', () => {
+            const testBookmarks = makeBookmarksArray()
+            testBookmarks.map(bookmark => {
+                if(!bookmark.rating){
+                    bookmark.rating = 1
+                }
+            })
+
+            beforeEach('insert bookmarks', () => {
+                return db
+                    .into('bookmarks')
+                    .insert(testBookmarks)
+            })
+
+            it('responds with 204 and removes the bookmark', () => {
+                const idToRemove = 2
+                const expectedBookmarks = testBookmarks.filter(bookmark => bookmark.id !== idToRemove)
+                return supertest(app)
+                    .delete(`/bookmarks/${idToRemove}`)
+                    .expect(204)
+                    .then(res =>
+                        supertest(app)
+                            .get(`/bookmarks`)
+                            .expect(expectedBookmarks)
+                    )
+            })
+        })
+        context(`Given no bookmarks`, () => {
+            it(`responds with 404`, () => {
+                const bookmarkId = 123456
+                return supertest(app)
+                    .delete(`/bookmarks/${bookmarkId}`)
+                    .expect(404, { error: { message: `Bookmark doesn't exist` } })
+            })
         })
     })
 })
