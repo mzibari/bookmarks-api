@@ -84,7 +84,7 @@ describe('Bookmarks Endpoints', function () {
                 title: 'Test new bookmark',
                 url: 'Listicle',
                 description: 'Test new bookmark content...',
-                rating: 2
+                rating: 2,
             }
             return supertest(app)
                 .post('/bookmarks')

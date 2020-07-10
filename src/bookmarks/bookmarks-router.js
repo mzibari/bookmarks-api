@@ -1,6 +1,6 @@
 const express = require('express')
 const BookmarksServices = require('./bookmarks-services')
-
+const xss = require('xss')
 const bookmarksRouter = express.Router()
 const jsonParser = express.json()
 
@@ -72,7 +72,7 @@ bookmarksRouter
             title: xss(res.bookmark.title), // sanitize title
             description: xss(res.bookmark.description), // sanitize content
             url: res.bookmark.url,
-            rating: xss(res.bookmark.rating),
+            rating: parseInt(xss(res.bookmark.rating)),
         })
 
     })
