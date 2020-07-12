@@ -1,6 +1,7 @@
 const express = require('express')
 const BookmarksServices = require('./bookmarks-services')
 const xss = require('xss')
+const path = require('path')
 const bookmarksRouter = express.Router()
 const jsonParser = express.json()
 
@@ -42,7 +43,7 @@ bookmarksRouter
             .then(bookmark => {
                 res
                     .status(201)
-                    .location(`/bookmarks/${bookmark.id}`)
+                    .location(path.posix.join(req.originalUrl + `/${bookmark.id}`))
                     .json(bookmark)
             })
             .catch(next)
@@ -70,7 +71,7 @@ bookmarksRouter
         res.json({
             id: res.bookmark.id,
             title: xss(res.bookmark.title), // sanitize title
-            description: xss(res.bookmark.description), // sanitize content
+            description: xss(res.bookmark.description), // sanitize description
             url: res.bookmark.url,
             rating: parseInt(xss(res.bookmark.rating)),
         })
@@ -86,5 +87,28 @@ bookmarksRouter
             })
             .catch(next)
     })
+
+    .patch(jsonParser, (req, res, next) => {
+        const { title, description, url } = req.body
+        const bookmarkToUpdate = { title, description, url }
+        const numberOfValues = Object.values(bookmarkToUpdate).filter(Boolean).length
+        if (numberOfValues === 0) {
+            return res.status(400).json({
+                error: {
+                    message: `Request body must contain either 'title', 'description' or 'url'`
+                }
+            })
+        }
+        BookmarksServices.updateBookmark(
+            req.app.get('db'),
+            req.params.bookmark_id,
+            bookmarkToUpdate
+        )
+            .then(numRowsAffected => {
+                res.status(204).end()
+            })
+            .catch(next)
+    })
+
 
 module.exports = bookmarksRouter
